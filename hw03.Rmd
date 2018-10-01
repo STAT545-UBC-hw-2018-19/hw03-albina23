@@ -1,0 +1,270 @@
+---
+title: "Gapminder Data Exploration, Homework 3"
+output: 
+    html_document:
+        theme: cerulean
+        toc: true
+        keep_md: true
+---
+
+## Introduction
+
+In this project, I will be further exploring `gapminder` dataset. Specifically, I will show you how to: 
+(1) Find the maximum and minimum of GDP per capita for all continents;
+(2) Find the spread of GDP per capita within the continents;
+(3) Compute a weighted mean, weighting by population;
+(4) See how life expectancy changes over time on different continents;
+(5) Report the absolute and/or relative abundance of countries with low life expectancy over time by continent.
+
+## Setting up access to the dataset, downloading needed packages
+
+I will be analyzing the gapminder dataset. First, load the `gapminder` R package. Also load tidyverse package - this will also load ggplot2 and dplyr.
+
+```{r}
+suppressPackageStartupMessages(library(gapminder))
+suppressPackageStartupMessages(library(tidyverse))
+suppressPackageStartupMessages(library(kableExtra))
+```
+
+## 1. The maximum and minimum of GDP per capita for all continents
+
+### Make a table showing max and min values for `gdpPercap` by continent
+```{r}
+GDPcontinent=gapminder %>% ## create a new data-frame
+  group_by(continent) %>%  ## group data by continent
+    summarize(maxGDPpercap=round(max(gdpPercap),2), ## find max `gdpPercap`
+              minGDPpercap=round(min(gdpPercap),2)) ## find min `gdpPercap`
+knitr::kable(GDPcontinent, format = "markdown") ## knit the table
+```
+
+
+
+Let's visualize the data to see which countries have the highest and the lowest `gdpPercap`
+
+### Maximum `gdpPercap` for each continent
+```{r}
+GDPcontinent %>%  ## get access to the dataframe
+  ggplot(aes(continent, maxGDPpercap, fill = continent, label = maxGDPpercap))+ ## specify x and y-axis, color by continent, add number values for each bar
+  geom_bar(stat = "identity")+ ## make a bar chart
+  labs(title="Maximum GDP per capita for continents")+ ## add a title
+  geom_text(size = 3.5, position = position_stack(vjust = 0.5)) ## changing style for numbers
+```
+
+From this barchart, we can notice that Asia has the highest maximum `gdpPercap` among all other continents, while the lowest maximum `gdpPercap` is located in Africa.
+
+### Minimum `gdpPercap` for each continent
+```{r}
+GDPcontinent %>%  ## get access to the dataframe
+  ggplot(aes(continent, minGDPpercap, fill = continent, label = minGDPpercap))+ ## specify x and y-axis, color by continent, add number values for each bar
+  geom_bar(stat = "identity")+ ## make a bar chart
+  labs(title="Minimum GDP per capita for continents")+ ## add a title
+  geom_text(size = 3.5, position = position_stack(vjust = 0.5)) ## changing style for numbers
+```
+
+From this barchart, we can notice that Oceania has the highest minimum `gdpPercap` among all other continents, while the lowest minimum `gdpPercap` is located in Africa.
+
+## 2. The spread of GDP per capita within the continents
+
+### Make a boxplot of `gdpPercap` for each continent with jitter points
+```{r}
+ggplot(gapminder, aes(continent, gdpPercap, fill=continent))+ ## identify x and y-axis, color by continent
+  scale_y_log10()+ ## use log 10 scale for GDP per capita variable
+  geom_boxplot()+ ## add a boxplot
+  geom_jitter(alpha=0.15)+ ## add jitter points with alpha 0.15
+  labs(title="Boxplots and jitterplots of GDP per capita by continent") ## add a title
+```
+
+We can notice that Asia has the highest net spread(range), while data of Africa, Americas, Europe and Oceania tends to be more clustered. Let's compute spread statistics by continent to know with certainty where every continent stands.
+
+
+### Calculate standard deviation, range and IQR of `gdpPercap` by continent
+```{r}
+GDPcontinentSpread = gapminder %>% ##create a new data-frame
+  group_by(continent) %>% ## group data by continent
+    summarize(StDevGDPpercap=round(sd(gdpPercap),2), ## find StDev of `gdpPercap`
+              RangeGDPpercap=round(max(gdpPercap)-min(gdpPercap),2), ## find range of `gdpPercap`
+              IQRgdpPercap=round(IQR(gdpPercap),2)) ## find IQR of `gdpPercap`
+
+knitr::kable(GDPcontinentSpread, format = "markdown") ## knit the table
+```
+
+### StDev of `gdpPercap` for each continent
+```{r}
+GDPcontinentSpread %>% ## get access to the dataframe
+  ggplot(aes(continent, StDevGDPpercap, fill=continent, label = StDevGDPpercap))+ ## specify x and y-axis, color by continent, add number values for each bar
+  geom_bar(stat = "identity")+ ## make a bar chart
+  labs(title="Standard deviation of GDP per capita for continents")+ ## add a title
+  geom_text(size = 3.5, position = position_stack(vjust = 0.5)) ## changing style for numbers
+```
+
+From this barchart, we can notice that Asia has the highest standard deviation of `gdpPercap` among all other continents, while the lowest standard deviation of `gdpPercap` belongs to Africa.
+
+### Range of `gdpPercap` for each continent
+```{r}
+GDPcontinentSpread %>% ## get access to the dataframe
+  ggplot(aes(continent, RangeGDPpercap, fill=continent, label = RangeGDPpercap))+ ## specify x and y-axis, color by continent, add number values for each bar
+  geom_bar(stat = "identity")+ ## make a bar chart
+  labs(title="Range of GDP per capita for continents")+ ## add a title
+  geom_text(size = 3.5, position = position_stack(vjust = 0.5)) ## changing style for numbers
+```
+
+From this barchart, we can notice that Asia has the highest range of `gdpPercap` among all other continents, while the lowest range of `gdpPercap` belongs to Africa.
+
+### IQR of `gdpPercap` for each continent
+```{r}
+GDPcontinentSpread %>% ## get access to the dataframe
+  ggplot(aes(continent, IQRgdpPercap, fill=continent, label = IQRgdpPercap))+ ## specify x and y-axis, color by continent, add number values for each bar
+  geom_bar(stat = "identity")+ ## make a bar chart
+  labs(title="IQR of GDP per capita for continents")+ ## add a title
+  geom_text(size = 3.5, position = position_stack(vjust = 0.5)) ## changing style for numbers
+```
+
+From this barchart, we can notice that Europe has the highest InterQuartile Range (IQR) of `gdpPercap` among all other continents, while the lowest IQR of `gdpPercap` belongs to Africa.
+
+
+## 3. Trimmed and weighted mean of life expectancy for different years
+
+
+### Trimmed mean of `lifeExp`
+We can compute trimmed mean of the `lifeExp` variable by ignoring the lowest/highest n% of data. In this case, let's find trimmed mean by 10% and arrange final data by year. We will also add regular mean for comparison purposes.
+```{r}
+MeanTrimmed = gapminder %>% ## create a new data frame
+  group_by(year) %>% ## group by year
+  summarize(TrimmedMean = round(mean(lifeExp, trim = 0.10),2),    
+            RegularMean=round(mean(lifeExp),2)) %>% ## calculate trimmed and regular mean
+  arrange(year)  ## arrange data by year 
+
+knitr::kable(MeanTrimmed, format = "markdown") ## knit the table
+```
+
+Let's visualize trimmed mean and regular mean in a time-plot
+```{r}
+MeanTrimmed %>% ## access the data frame
+  ggplot(aes(year)) + ## specify x-axis
+  geom_line(aes(y = TrimmedMean, colour = "Trimmed Mean")) + ## add TrimmedMean plot
+  geom_line(aes(y = RegularMean, colour = "Regular Mean")) + ## add RegularMean plot
+  ylab("Average Life Expectancy")+ ## change y-axis label
+  labs(title="Regular and Trimmed Average Life Expectancy by Year") ## add a title
+```
+
+### Weighted mean of `lifeExp`by population
+
+We can compute weighted mean of `lifeExp` by giving more value to countries with higher population.We will also compute regular mean for comparison purposes and arrange outcomes by year.
+```{r}
+MeanWeighted = gapminder %>% ## create a new data frame
+  group_by(year) %>% ## group by year
+  summarize(WeightedMean = round(weighted.mean(lifeExp, pop),2),    
+            RegularMean=round(mean(lifeExp),2)) %>% ## calculate weighted and regular mean
+  arrange(year)  ## arrange data by year 
+
+knitr::kable(MeanWeighted, format = "markdown") ## knit the table
+```
+
+Let's visualize weighted mean and regular mean in a time-plot
+```{r}
+MeanWeighted %>% ## access the data frame
+  ggplot(aes(year)) + ## specify x-axis
+  geom_line(aes(y = WeightedMean, colour = "Weighted Mean")) + ## add WeightedMean plot
+  geom_line(aes(y = RegularMean, colour = "Regular Mean")) + ## add RegularMean plot
+  ylab("Average Life Expectancy")+ ## change y-axis label
+  labs(title="Regular and Weighted by Population Average Life Expectancy by Year") ## add a title
+```
+
+## 4. How is life expectancy changing over time on different continents?
+
+### Summary table for max, mean and min for `lifeExp`
+
+I will create a table showing max, mean and min life expectancy for every continent in any given year
+```{r}
+LifeExp_Continent_Year = gapminder %>% ## create a new data frame
+  group_by(continent, year) %>% ## group by continent and year
+  summarize(maxlifeExp=round(max(lifeExp),2),
+            meanlifeExp=round(mean(lifeExp),2),
+            minlifeExp=round(min(lifeExp),2)) %>% ## calculate max, min and mean life expectancy
+  arrange(continent, year)  ## arrange data by continent and year 
+
+knitr::kable(LifeExp_Continent_Year, format = "markdown") ## knit the table
+```
+
+### Max `lifeExp`
+Let's visualize maximum life expectancy by continent over years
+```{r}
+LifeExp_Continent_Year %>% ## access the data frame
+    ggplot(aes(year, maxlifeExp, color=continent))+ ## specify x and y-axis, color by continent
+  geom_point()+ # add points
+  geom_line()+ # add a line connecting the points for each continent
+  ylab("Maximum Life Expectancy")+ ## change y-axis label
+  labs(title="Maximum Life Expectancy (grouped by continent)") ## add a title
+```
+
+### Mean `lifeExp`
+Let's visualize average life expectancy by continent over years
+```{r}
+LifeExp_Continent_Year %>% ## access the data frame
+    ggplot(aes(year, meanlifeExp, color=continent))+ ## specify x and y-axis, color by continent
+  geom_point()+ # add points
+  geom_line()+ # add a line connecting the points for each continent
+  ylab("Average Life Expectancy")+ ## change y-axis label
+  labs(title="Average Life Expectancy (grouped by continent)") ## add a title
+```
+
+### Min `lifeExp`
+Let's visualize minimum life expectancy by continent over years
+```{r}
+LifeExp_Continent_Year %>% ## access the data frame
+    ggplot(aes(year, minlifeExp, color=continent))+ ## specify x and y-axis, color by continent
+  geom_point()+ # add points
+  geom_line()+ # add a line connecting the points for each continent
+  ylab("Minimum Life Expectancy")+ ## change y-axis label
+  labs(title="Minimum Life Expectancy (grouped by continent)") ## add a title
+```
+
+### Alternative approach using facet wrapping
+A different way to visualize this is by using `facet_wrap` function and aggregating life expectancy timeplots by continent
+
+```{r}
+LifeExp_Continent_Year %>% ## access the data frame
+  ggplot(aes(year)) + ## specify x-axis
+  geom_line(aes(y = maxlifeExp, colour = "Max Life Expectancy")) + ## add maxlifeExp plot 
+    geom_line(aes(y = meanlifeExp, colour = "Mean Life Expectancy")) + ## add meanlifeExp plot 
+    geom_line(aes(y = minlifeExp, colour = "Min Life Expectancy")) + ## add minlifeExp plot 
+  ylab("Life Expectancy") + ## change y-axis label
+  facet_wrap(~continent) + ## facet the graphs together
+  labs(title="Life Expectancy Measures (grouped by continent)") ## add a title
+```
+
+
+## 5. The absolute and/or relative abundance of countries with low life expectancy over time by continent
+
+### Calculating benchmark
+I will be using the 75th percentile of `lifeExp` variable.
+```{r}
+gapminder %>% ## access the dataset
+  summarize(Q3_lifeExp=round(quantile(lifeExp,0.75),2)) %>% ## calculate Q3 for life expectancy
+  knitr::kable(format = "markdown") 
+```
+
+The 75th percentile (Q3) of life expectancy equals to 70.85.
+
+### Generating data frame
+
+I need to generate a new data frame Benchmark by adding two more columns: Threshold and Above. Threshold column tells you whether each selected country is above or below the calculated 75th percentile. Above column gives 1 to countries that are above the benchmark and 0 if they are below.
+```{r}
+Benchmark = gapminder %>% ## create a data frame
+  transmute(country, continent, year, lifeExp, Threshold = if_else(lifeExp > 70.85, "Above", "Below"), Above = if_else(lifeExp > 70.85, 1, 0)) %>%  ## add two columns
+  arrange(year, continent, country) ## arrange the data year, continent and country
+```
+
+### Visualizing results
+
+
+```{r}
+Benchmark %>% 
+  group_by(continent, year) %>% 
+  summarize(propAbove=round(sum(Above)/length(Above),2)) %>% 
+  ggplot(aes(year, propAbove, color=continent))+ ## specify x and y-axis, color by continent
+  geom_point()+ # add points
+  geom_line()+ # add a line connecting the points for each continent
+  ylab("Proportion of countries above the benchmark")+ ## change y-axis label
+  labs(title="Proportion of countries with life expectancy above 70.85") ## add a title
+```
