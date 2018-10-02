@@ -10,11 +10,11 @@ output:
 ## Introduction
 
 In this project, I will be further exploring `gapminder` dataset. Specifically, I will show you how to: 
-(1) Find the maximum and minimum of GDP per capita for all continents;
-(2) Find the spread of GDP per capita within the continents;
-(3) Compute a weighted mean, weighting by population;
-(4) See how life expectancy changes over time on different continents;
-(5) Report the absolute and/or relative abundance of countries with low life expectancy over time by continent.
+(1) Find the maximum and minimum of `gdpPercap` for all continents;
+(2) Find the spread of `gdpPercap` within the continents;
+(3) Compute a trimmed mean and a weighted mean of `lifeExp`;
+(4) See how `lifeExp` changes over time on different continents;
+(5) Report the relative abundance of countries with low `lifeExp` over time by continent.
 
 ## Setting up access to the dataset, downloading needed packages
 
@@ -23,7 +23,6 @@ I will be analyzing the gapminder dataset. First, load the `gapminder` R package
 ```{r}
 suppressPackageStartupMessages(library(gapminder))
 suppressPackageStartupMessages(library(tidyverse))
-suppressPackageStartupMessages(library(kableExtra))
 ```
 
 ## 1. The maximum and minimum of GDP per capita for all continents
@@ -234,37 +233,48 @@ LifeExp_Continent_Year %>% ## access the data frame
 ```
 
 
-## 5. The absolute and/or relative abundance of countries with low life expectancy over time by continent
+## 5. The relative abundance of countries with low life expectancy over time by continent
 
 ### Calculating benchmark
-I will be using the 75th percentile of `lifeExp` variable.
+I will be using the 40th percentile of `lifeExp` variable.
 ```{r}
 gapminder %>% ## access the dataset
-  summarize(Q3_lifeExp=round(quantile(lifeExp,0.75),2)) %>% ## calculate Q3 for life expectancy
-  knitr::kable(format = "markdown") 
+  summarize(Q3_lifeExp=round(quantile(lifeExp,0.4),2)) %>% ## calculate Q3 for life expectancy
+  knitr::kable(format = "markdown")  ## knit the table
 ```
 
-The 75th percentile (Q3) of life expectancy equals to 70.85.
+The 40th percentile of life expectancy equals to 55.73.
 
 ### Generating data frame
 
-I need to generate a new data frame Benchmark by adding two more columns: Threshold and Above. Threshold column tells you whether each selected country is above or below the calculated 75th percentile. Above column gives 1 to countries that are above the benchmark and 0 if they are below.
+I need to generate a new data frame Benchmark by adding two more columns: Threshold and Above. Threshold column tells you whether each selected country is above or below the calculated 40th percentile. Above column gives 1 to countries that are above the benchmark and 0 if they are below.
 ```{r}
 Benchmark = gapminder %>% ## create a data frame
-  transmute(country, continent, year, lifeExp, Threshold = if_else(lifeExp > 70.85, "Above", "Below"), Above = if_else(lifeExp > 70.85, 1, 0)) %>%  ## add two columns
+  transmute(country, continent, year, lifeExp, Threshold = if_else(lifeExp > 55.73, "Above", "Below"), Above = if_else(lifeExp > 55.73, 1, 0)) %>%  ## add two columns
   arrange(year, continent, country) ## arrange the data year, continent and country
+
+## We don't want to showcase the whole dataframe as that would include all the gapminder row entries.
+```
+
+### Creating a table for proportions
+
+Create a table showing proportions of countries with life expectancy above the threshold for each continent and year
+```{r}
+Benchmark_Continent=Benchmark %>%  ## create a new data frame
+  group_by(continent, year) %>%  ## group by continent and year
+  summarize(propAbove=round(sum(Above)/length(Above),2)) ## compute proportions of countries with life expectancy above the threshold for each continent and year
+
+knitr::kable(Benchmark_Continent, format = "markdown") ## knit the table
 ```
 
 ### Visualizing results
 
-
+Visualize this table with year on x-axis, proportions on y-axis, grouped by continent
 ```{r}
-Benchmark %>% 
-  group_by(continent, year) %>% 
-  summarize(propAbove=round(sum(Above)/length(Above),2)) %>% 
+Benchmark_Continent %>%  ## access the data frame
   ggplot(aes(year, propAbove, color=continent))+ ## specify x and y-axis, color by continent
   geom_point()+ # add points
   geom_line()+ # add a line connecting the points for each continent
   ylab("Proportion of countries above the benchmark")+ ## change y-axis label
-  labs(title="Proportion of countries with life expectancy above 70.85") ## add a title
+  labs(title="Proportion of countries with life expectancy above 40th percentile") ## add a title
 ```
