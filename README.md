@@ -1,4 +1,5 @@
-# hw03-albina23
+# Homework 3 Submission
+## by Albina Gibadullina
 
 Hi, this is repository for Homework 3 for STAT 545A. In it, I will be analyzing `gapminder` dataset by using `ggplot2` and `dplyr` packages.
 
