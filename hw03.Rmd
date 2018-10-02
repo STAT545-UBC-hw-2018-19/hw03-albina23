@@ -239,7 +239,7 @@ LifeExp_Continent_Year %>% ## access the data frame
 I will be using the 40th percentile of `lifeExp` variable.
 ```{r}
 gapminder %>% ## access the dataset
-  summarize(Q3_lifeExp=round(quantile(lifeExp,0.4),2)) %>% ## calculate Q3 for life expectancy
+  summarize(FortyPerc_lifeExp=round(quantile(lifeExp,0.4),2)) %>% ## calculate Q3 for life expectancy
   knitr::kable(format = "markdown")  ## knit the table
 ```
 
