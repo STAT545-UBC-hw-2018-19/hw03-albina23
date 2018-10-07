@@ -14,3 +14,4 @@ The structure of the assignment consists of the following tasks:
 - Computing a trimmed mean and a weighted mean of `lifeExp`
 - Seeing how `lifeExp` changes over time on different continents
 - Reporting the relative abundance of countries with low `lifeExp` over time by continent.
+# hw04-albina23
